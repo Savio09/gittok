@@ -1,0 +1,54 @@
+// Prisma schema for GitTok with Clerk authentication
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User synced from Clerk
+model User {
+  id              String   @id // Clerk user ID
+  email           String?  @unique
+  username        String?  @unique // GitHub username
+  firstName       String?
+  lastName        String?
+  imageUrl        String?
+  githubId        String?  // GitHub user ID
+  githubToken     String?  @db.Text // GitHub OAuth access token
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // User's saved/liked repos
+  savedRepos      SavedRepo[]
+  viewHistory     ViewHistory[]
+}
+
+// Repos the user has saved/liked
+model SavedRepo {
+  id          String   @id @default(cuid())
+  userId      String
+  repoId      Int      // GitHub repo ID
+  repoName    String   // full_name like "owner/repo"
+  savedAt     DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, repoId])
+}
+
+// Track what repos the user has viewed
+model ViewHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  repoId      Int
+  repoName    String
+  viewedAt    DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, viewedAt])
+}

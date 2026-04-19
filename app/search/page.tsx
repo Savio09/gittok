@@ -3,9 +3,9 @@
 import { useState } from "react";
 import RepoFeed from "@/components/RepoFeed";
 import { Repository } from "@/types/repository";
-import { searchRepos } from "@/lib/github";
 import Header from "@/components/Header";
 import { Search as SearchIcon } from "lucide-react";
+import { searchReposApi } from "@/lib/frontendApi";
 
 export default function SearchPage() {
   const [repos, setRepos] = useState<Repository[]>([]);
@@ -20,7 +20,7 @@ export default function SearchPage() {
     setLoading(true);
     setHasSearched(true);
     try {
-      const data = await searchRepos(query);
+      const data = await searchReposApi(query);
       setRepos(data);
     } catch (error) {
       console.error("Error searching repos:", error);
@@ -105,4 +105,3 @@ export default function SearchPage() {
     </>
   );
 }
-

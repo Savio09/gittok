@@ -729,21 +729,6 @@ export default function SlideshowPlayer({
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Transcript caption ── */}
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            key={`cap-${current}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 0.45, duration: 0.3 }}
-            className="absolute bottom-36 left-5 right-16 z-20 pointer-events-none"
-          >
-            <p className="text-white/60 text-xs leading-relaxed">{slide.transcript}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

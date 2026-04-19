@@ -1,291 +1,130 @@
-# GitTok 🎵
+# GitTok
 
-A TikTok-style web application for discovering and exploring trending GitHub repositories with an immersive, swipeable interface.
+A TikTok-style platform that turns GitHub repositories into narrated, swipeable slideshows. Instead of reading through READMEs, you swipe through bite-sized presentations that give you the essence of a project in seconds.
 
-![GitTok](https://img.shields.io/badge/Next.js-14.2-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=flat-square&logo=tailwind-css)
+## How It Works
 
-## ✨ Features
+GitTok fetches a repository's metadata and README from GitHub, parses out the key information (description, features, stats, topics), and assembles it into an animated slideshow with text-to-speech narration. No manual content creation required.
 
-### 🎯 Personalized Social Discovery
-- **❤️ For You Feed**: Personalized content from developers you follow on GitHub
-- **👥 Network Activity**: See what repos your network is starring and creating
-- **📊 Trending in Network**: Discover repos multiple followers have starred
-- **🔐 GitHub OAuth**: Sign in to unlock personalized feeds
+Each slideshow has six slides:
 
-### 🎬 AI Video Generation
-- **AI-Generated Videos**: Automatically create stunning videos from repository data
-- **Multiple Providers**: Support for Google Veo, Runway, Nano Banana, OpenAI Sora
-- **Smart Prompts**: Cinematic tech-focused prompts generated from repo data
-- **Video Controls**: Play/pause, mute/unmute, view AI prompts
+1. **Intro** -- project name, avatar, language badge
+2. **Overview** -- what the project does (extracted from description/README)
+3. **Features** -- key features parsed from the README or inferred from metadata
+4. **Stats** -- animated counters for stars, forks, and watchers
+5. **Topics** -- relevant tags and categories
+6. **CTA** -- link back to the GitHub repository
 
-### 💫 User Experience
-- **TikTok-Style Interface**: Vertical scrolling with smooth animations
-- **Social Context**: See who in your network starred each repo
-- **Beautiful UI**: Modern, gradient-filled cards with smooth animations
-- **Responsive Design**: Works seamlessly on desktop and mobile
-- **Works Without Auth**: Guest mode with trending repos
+Slides advance automatically when the narration finishes, or you can tap to navigate manually.
 
-### 🔍 Discovery Features
-- **Trending Repositories**: Discover the hottest repos on GitHub
-- **Advanced Search**: Find repos by language, topic, stars, and more
-- **Following Network**: Explore repos forked by people in any user's network
-- **Real-time GitHub Data**: Powered by GitHub's official API
+## Three Ways to Discover
 
-## 🚀 Getting Started
+| Feed | Route | Auth Required | Description |
+|------|-------|---------------|-------------|
+| **Trending** | `/` | No | Most popular repos from the past week on GitHub |
+| **Discover** | `/discover` | No | Curated slideshows of standout projects (React, Next.js, VS Code, etc.) |
+| **For You** | `/feed` | Yes (GitHub OAuth) | Personalized feed powered by your GitHub social graph |
 
-> **Quick Start**: Just run `npm install && npm run dev` - the app works immediately with mock data!
+The **For You** feed pulls your following list, then surfaces repos that people in your network have starred, forked, or created. Each item shows social context explaining why it appeared in your feed.
+
+## Tech Stack
+
+### Frontend (Next.js)
+- **Next.js 15** with App Router
+- **React 18** with TypeScript
+- **Tailwind CSS** for styling
+- **Framer Motion** for slide animations
+- **Clerk** for GitHub OAuth authentication
+- **Web Speech API** for client-side text-to-speech (with remote TTS fallback)
+
+### Backend (Python FastAPI)
+- **FastAPI** with Pydantic schemas
+- **GitHub REST API** (via httpx) for repo data, README fetching, and social graph queries
+- **Slideshow generation** from README parsing + metadata inference
+- **Text-to-speech** via OpenAI or Cloudflare Workers AI (with disk caching)
+- **SQLite** for repo snapshot persistence
+
+### Architecture
+
+The Next.js frontend talks to the Python backend through API route proxies. This keeps GitHub tokens and TTS API keys off the client. The backend handles all GitHub API calls, slideshow assembly, and audio synthesis.
+
+## Getting Started
 
 ### Prerequisites
+- Node.js 18+
+- Python 3.10+
+- A GitHub personal access token
 
-- Node.js 18+ and npm/yarn/pnpm
-- A GitHub account (optional, for higher API rate limits)
-
-### Installation
-
-1. **Clone the repository**
+### Setup
 
 ```bash
-git clone <your-repo-url>
-cd gittok
-```
-
-> 💡 **See [QUICKSTART.md](./QUICKSTART.md) for a 3-minute setup guide!**
-
-2. **Install dependencies**
-
-```bash
+# Install frontend dependencies
 npm install
-# or
-yarn install
-# or
-pnpm install
+
+# Install backend dependencies
+cd backend
+pip install -e ".[dev]"
+cd ..
+
+# Copy environment template and fill in your keys
+cp .env.example .env.local
 ```
 
-3. **Set up environment variables** (Optional)
+Required environment variables:
 
-Create a `.env.local` file in the root directory:
+| Variable | Purpose |
+|----------|---------|
+| `GITHUB_TOKEN` | GitHub API access (backend) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk authentication |
+| `CLERK_SECRET_KEY` | Clerk server-side auth |
+| `DATABASE_URL` | PostgreSQL for Clerk user sync |
+| `OPENAI_API_KEY` or Cloudflare credentials | Remote text-to-speech (optional) |
 
-```env
-# Optional: For higher GitHub API rate limits
-NEXT_PUBLIC_GITHUB_TOKEN=your_github_personal_access_token
-
-# Optional: AI Video Generation APIs
-NEXT_PUBLIC_RUNWAY_API_KEY=your_runway_api_key
-NEXT_PUBLIC_NANO_BANANA_API_KEY=your_nano_banana_api_key
-NEXT_PUBLIC_OPENAI_API_KEY=your_openai_api_key
-
-# Optional: For GitHub OAuth authentication
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret
-GITHUB_ID=your_github_oauth_app_id
-GITHUB_SECRET=your_github_oauth_app_secret
-```
-
-**To get a GitHub Personal Access Token:**
-
-- Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-- Generate new token with `public_repo` scope
-- Copy the token and add it to your `.env.local` file
-
-**AI Video Generation Setup (Optional):**
-The app works with mock videos by default. To use real AI video generation:
-
-- **Runway ML**: Sign up at [runwayml.com](https://runwayml.com) and get API access
-- **Nano Banana**: Visit [nanobananavideo.com](https://nanobananavideo.com) for API access
-- **OpenAI Sora**: Request access to Sora API (limited availability)
-- **Google Veo**: Currently in limited preview
-
-See [VIDEO_PROVIDERS.md](./VIDEO_PROVIDERS.md) for detailed setup instructions
-
-4. **Run the development server**
+### Running
 
 ```bash
+# Terminal 1: Start the Python backend
+npm run dev:backend
+
+# Terminal 2: Start the Next.js frontend
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-5. **Open your browser**
+Open [http://localhost:3000](http://localhost:3000).
 
-Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 📱 Pages & Features
-
-### Home (`/`)
-
-- Displays trending GitHub repositories from the past week
-- Vertical scroll/swipe to navigate between repos
-- Click navigation dots on the right to jump to specific repos
-- Beautiful gradient cards with smooth animations
-
-### AI Videos (`/video`) ⭐ NEW
-
-- **AI-generated video content** for each repository
-- TikTok-style video feed with auto-play
-- Play/pause and mute/unmute controls
-- View AI prompts used to generate videos
-- Vertical swipe navigation between videos
-- Stats overlay (stars, forks, watchers)
-- Direct links to GitHub and project websites
-
-### Following (`/following`)
-
-- Enter any GitHub username
-- Discover repositories forked by people they follow
-- Great for finding what's popular in specific communities
-
-### Search (`/search`)
-
-- Advanced search with GitHub query syntax
-- Filter by language, stars, topics, and more
-- Examples:
-  - `language:python stars:>1000`
-  - `topic:machine-learning`
-  - `react hooks`
-
-## 🎨 UI Components
-
-### RepoCard
-
-Each repository is displayed as a beautiful, immersive card featuring:
-
-- Repository owner avatar and username
-- Repository name and description
-- Programming language with color-coded badges
-- Topic tags
-- Stats: stars, forks, watchers, issues
-- Links to GitHub and project website
-- Animated background with gradient effects
-
-### RepoFeed
-
-- Implements smooth vertical scrolling
-- Keyboard and mouse wheel navigation
-- Touch/swipe support for mobile devices
-- Visual navigation dots
-
-## 🛠 Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **GitHub API**: Octokit
-- **Authentication**: NextAuth.js (optional)
-- **Icons**: Lucide React
-
-## 📦 Project Structure
+## Project Structure
 
 ```
 gittok/
-├── app/
-│   ├── api/auth/          # NextAuth API routes
-│   ├── following/         # Following network page
-│   ├── search/            # Search page
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
-│   └── globals.css        # Global styles
-├── components/
-│   ├── Header.tsx         # Navigation header
-│   ├── RepoCard.tsx       # Repository card component
-│   └── RepoFeed.tsx       # Scrolling feed component
-├── lib/
-│   └── github.ts          # GitHub API service
-├── types/
-│   └── repository.ts      # TypeScript types
-└── README.md
+  app/
+    api/              # Next.js API routes (proxy to backend)
+    discover/         # Curated slideshow feed
+    feed/             # Personalized "For You" feed
+    search/           # Repository search
+    settings/         # User preferences
+    sign-in/          # Clerk sign-in
+    sign-up/          # Clerk sign-up
+    page.tsx          # Trending home page
+  backend/
+    server/
+      api/router.py   # FastAPI endpoints
+      services/       # GitHub, slides, feeds, speech
+      core/           # Config, DB, models, schemas
+  components/
+    DiscoverCard.tsx   # Slideshow-enabled repo card
+    DiscoverFeed.tsx   # Swipeable feed with windowed rendering
+    SlideshowPlayer.tsx # Core slideshow engine with voiceover
+    RepoCard.tsx       # Simple repo info card (trending/search)
+    RepoFeed.tsx       # Simple swipeable feed
+    Header.tsx         # Navigation
+  lib/
+    frontendApi.ts     # Client-side API calls
+    backend.ts         # Server-side proxy helper
+    appSettings.ts     # User preferences (localStorage)
+  types/
+    repository.ts      # Shared TypeScript types
 ```
 
-## 🌐 API Rate Limits
+## Historical Context
 
-Without authentication, GitHub API has a rate limit of 60 requests per hour. To increase this to 5,000 requests per hour:
-
-1. Create a GitHub Personal Access Token
-2. Add it to your `.env.local` as `NEXT_PUBLIC_GITHUB_TOKEN`
-
-## 🚢 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Import your repository on [Vercel](https://vercel.com)
-3. Add your environment variables in the Vercel dashboard
-4. Deploy!
-
-### Other Platforms
-
-```bash
-npm run build
-npm run start
-```
-
-## 🎥 AI Video Generation
-
-GitTok uses cutting-edge AI to automatically generate engaging videos for each repository:
-
-### How it Works
-
-1. **Extract Repository Data**: Name, description, language, stats
-2. **Generate AI Prompt**: Create cinematic tech-focused prompts
-3. **Call Video API**: Use Runway, Nano Banana, Sora, or Veo
-4. **Display Video**: TikTok-style vertical feed with controls
-
-### Prompt Examples
-
-The app generates prompts like:
-
-```
-"Create a cinematic tech showcase video featuring 'React',
-a JavaScript project. Show abstract code flowing on screens,
-futuristic UI elements, and digital particles. Display the
-project name prominently with glowing effects. 145K stars
-as glowing particles. Style: Modern, tech, dark theme with
-neon accents."
-```
-
-### Supported Providers
-
-- ✅ **Mock** (Default) - Free demo videos
-- 🎬 **Runway ML** - High-quality generation
-- 🍌 **Nano Banana** - Studio-quality videos
-- 🤖 **OpenAI Sora** - Advanced AI videos
-- 🔮 **Google Veo** - Next-gen (preview)
-
-See [VIDEO_PROVIDERS.md](./VIDEO_PROVIDERS.md) for setup instructions.
-
-## 🎯 Future Enhancements
-
-- [x] AI video generation integration
-- [x] TikTok-style video feed
-- [x] Multiple video provider support
-- [ ] React Native mobile app
-- [ ] User authentication and personalized feeds
-- [ ] Save favorite repositories
-- [ ] Video caching and CDN
-- [ ] Real-time generation progress
-- [ ] Custom video templates
-- [ ] Filter by programming language
-- [ ] Dark/light theme toggle
-- [ ] Repository comparison feature
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open issues and pull requests.
-
-## 📄 License
-
-MIT License - feel free to use this project for learning and personal use.
-
-## 🙏 Acknowledgments
-
-- Inspired by TikTok's intuitive vertical scrolling interface
-- Built with GitHub's amazing API
-- UI inspiration from modern design trends
-
----
-
-**Made with ❤️ for the developer community**
+The original vision was to generate AI videos for repositories using providers like Runway, Sora, and Google Veo. After evaluating the constraints (slow generation, high cost, inconsistent quality), the project pivoted to client-side slideshows. They generate instantly, cost nothing, and communicate project information more effectively. The legacy AI video code has been removed.

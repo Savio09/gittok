@@ -1,0 +1,18 @@
+[project]
+name = "gittok-backend"
+version = "0.1.0"
+description = "Python backend for GitTok feed, repository, slideshow, and messaging APIs"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "fastapi>=0.115.0",
+  "httpx>=0.28.0",
+  "pydantic-settings>=2.8.0",
+  "sqlalchemy>=2.0.38",
+  "psycopg[binary]>=3.2.0",
+  "uvicorn[standard]>=0.34.0",
+]
+
+[tool.uv]
+package = false
+
